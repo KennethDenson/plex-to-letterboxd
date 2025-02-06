@@ -1,0 +1,16 @@
+# Ignore environment-specific files
+.env
+output/
+export_log.txt
+plex-watched-movies.csv
+exported_history.json
+.DS_Store
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore Docker-generated files
+*.log
+*.pid

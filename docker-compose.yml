@@ -1,0 +1,8 @@
+services:
+  plex-to-letterboxd:
+    build: .
+    container_name: plex-to-letterboxd
+    env_file:
+      - .env  # Load environment variables securely from .env file
+    volumes:
+      - /synology/nas/plex-to-letterboxd:/output  # Updated location
