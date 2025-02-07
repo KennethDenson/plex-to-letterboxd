@@ -35,7 +35,7 @@ This project exports your Plex watched movie history to a CSV file, with feature
 The script reads the following environment variables:
 
 - `PLEX_URL`  
-  The URL of your Plex server (e.g., `http://192.168.1.139:32400`).
+  The URL of your Plex server (e.g., `(http://{youripaddress}:32400).
 
 - `PLEX_TOKEN`  
   Your Plex authentication token.
@@ -46,17 +46,56 @@ The script reads the following environment variables:
 - `PLEX_LIBRARIES`  
   A comma-separated list of Plex library names to export (default: `Movies`).
 
-- `EXPORT_DIR`  
-  The directory where the CSV file and other output files will be saved (default: `/output`).
+
+## 📦 Docker Compose Example
+Create a `docker-compose.yml` file with the following content:
+
+```yaml
+version: "3.8"
+
+services:
+  plex-to-letterboxd:
+    image: kennethrdenson/plex-to-letterboxd:latest
+    container_name: new-plex-to-letterboxd
+    restart: unless-stopped
+    network_mode: "host"
+    environment:
+      - TZ=America/Chicago
+      - PLEX_URL=${PLEX_URL}
+      - PLEX_TOKEN=${PLEX_TOKEN}
+      - SCHEDULE_TIME=${SCHEDULE_TIME}
+      - PLEX_LIBRARIES=${PLEX_LIBRARIES}
+      - EXPORT_DIR=${EXPORT_DIR}
+    volumes:
+      - /synology/nas/plex-to-letterboxd:/output
+    env_file:
+      - .env
+```
+
+.env File Format
+
+```yaml
+# Plex server URL (e.g., http://192.168.1.100:32400)
+PLEX_URL=http://your-plex-server:32400
+
+# Plex API token (Find in Plex settings)
+PLEX_TOKEN=your-plex-token-here
+
+# Time to run the export job (24-hour format)
+SCHEDULE_TIME=03:00
+
+# Comma-separated list of Plex libraries to scan
+PLEX_LIBRARIES=Movies,Documentaries
+```
+
 
 ## Usage
 
 1. **Local Testing:**  
    You can run the script locally if you set the required environment variables:
    ```bash
-   export PLEX_URL="http://192.168.1.139:32400"
+   export PLEX_URL="http://{youripaddress}:32400"
    export PLEX_TOKEN="your_plex_token"
    export SCHEDULE_TIME="03:00"
-   export PLEX_LIBRARIES="Movies,Queer Film,Theatre,Concerts"
-   export EXPORT_DIR="/output"
+   export PLEX_LIBRARIES="Movies,Documentaries"
    python3 export_plex.py
