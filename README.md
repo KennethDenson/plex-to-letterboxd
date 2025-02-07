@@ -1,6 +1,6 @@
 # Plex to Letterboxd Exporter
 
-This container connects to your **Plex** server, extracts your **watched movies**, and prepares them for easy import into **Letterboxd**.
+This container connects to your **Plex** server, extracts your **watched movies**, and prepares them for easy import into **Letterboxd**. It doesn't appear that Letterboxd has an API for adding directly to your watched films, so this import option is the best we have for now.
 
 ## Features
 - **Automated Export**: Fetches watched movies from Plex at a scheduled time.
