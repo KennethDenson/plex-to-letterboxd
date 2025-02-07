@@ -1,12 +1,17 @@
+version: "3.8"
+
 services:
   plex-to-letterboxd:
     build: .
-    container_name: plex-to-letterboxd
+    container_name: new-plex-to-letterboxd
+    restart: unless-stopped
+    network_mode: "host"
     environment:
-      - TZ=America/Chicago  # Set your local timezone
+      - TZ=America/Chicago
       - PLEX_URL=http://192.168.1.139:32400
       - PLEX_TOKEN=QFM_K3owt2wbCqvYcKQG
+      - SCHEDULE_TIME=03:00
       - PLEX_LIBRARIES=Movies,Queer Film,Theatre,Concerts
-      - SCHEDULE_TIME=09:40
+      - EXPORT_DIR=/output
     volumes:
-      - /synology/nas/plex-to-letterboxd:/output  # Updated location
+      - /synology/nas/plex-to-letterboxd:/output
