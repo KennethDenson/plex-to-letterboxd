@@ -13,7 +13,6 @@ import schedule
 PLEX_URL = os.getenv("PLEX_URL")
 PLEX_TOKEN = os.getenv("PLEX_TOKEN")
 SCHEDULE_TIME = os.getenv("SCHEDULE_TIME", "03:00")  # Default: Runs at 3:00 AM
-# PLEX_LIBRARIES is expected as a comma-separated string (e.g., "Movies,Queer Film,Theatre,Concerts")
 LIBRARIES = os.getenv("PLEX_LIBRARIES", "Movies").split(",")
 OUTPUT_DIR = os.getenv("EXPORT_DIR", "/output")
 
@@ -30,8 +29,8 @@ except Exception as e:
     print(f"❌ Error connecting to Plex: {e}")
     sys.exit(1)
 
-# Define file paths for CSV, history tracking, and logging.
-csv_filename = os.path.join(OUTPUT_DIR, "plex-watched-movies.csv")
+# Define file paths
+csv_filename = os.path.join(OUTPUT_DIR, "letterboxd-import.csv")
 history_file = os.path.join(OUTPUT_DIR, "exported_history.json")
 log_file = os.path.join(OUTPUT_DIR, "export_log.txt")
 
@@ -47,10 +46,16 @@ def log_message(message):
     with open(log_file, "a") as log:
         log.write(log_entry + "\n")
 
+def convert_rating(plex_rating):
+    """Convert Plex's 1-10 rating to Letterboxd's 0.5-5.0 scale."""
+    if plex_rating is None:
+        return ""
+    return round(max(0.5, min(5.0, (plex_rating / 2))), 1)
+
 def export_watched_movies():
-    """Export watched movies from Plex to CSV with rewatch tracking and user ratings."""
+    """Export watched movies from Plex in a format compatible with Letterboxd."""
     log_message("📢 Plex to Letterboxd export started.")
-    
+
     # Load previously exported watch event identifiers (to avoid duplicates).
     if os.path.exists(history_file):
         with open(history_file, "r") as f:
@@ -67,43 +72,42 @@ def export_watched_movies():
             log_message(f"📁 Processing library: {library_name}")
 
             for movie in movies:
-                # Only process movies that have been watched.
-                if movie.viewCount > 0:
+                if movie.viewCount > 0:  # Only process watched movies
                     watched_date = movie.lastViewedAt.strftime('%Y-%m-%d') if movie.lastViewedAt else ""
-                    # Try to capture the user rating (if available)
-                    try:
-                        user_rating = movie.userRating
-                    except AttributeError:
-                        user_rating = ""
-                    
+                    rating = convert_rating(movie.userRating)
+
                     identifier = f"{movie.title}_{watched_date}"
                     if identifier in exported_history:
                         continue
 
+                    # Add "Rewatch" tag if watched multiple times
+                    tags = "Rewatch" if movie.viewCount > 1 else ""
+
                     record = {
-                        "Title": movie.title,
+                        "Name": movie.title,
                         "Year": movie.year,
                         "WatchedDate": watched_date,
-                        "Rewatch": "Yes" if movie.viewCount > 1 else "No",
-                        "ViewCount": movie.viewCount,
-                        "UserRating": user_rating
+                        "Tags": tags,
+                        "Rating": rating,
+                        "Review": ""  # Empty because no review data is collected
                     }
                     new_movies.append(record)
                     exported_history.add(identifier)
+
                     log_message(f"➕ Added: {movie.title} ({movie.year}) - Watched on {watched_date}, "
-                                f"ViewCount: {movie.viewCount}, UserRating: {user_rating}")
+                                f"Rating: {rating}, Tags: {tags}")
         except Exception as e:
             log_message(f"❌ Error processing library '{library_name}': {e}")
 
-    # Save updated history.
+    # Save updated history
     with open(history_file, "w") as f:
         json.dump(list(exported_history), f)
 
-    # Append new records to the CSV file (write header only if file doesn't exist).
+    # Write to CSV (header only if file doesn’t exist)
     if new_movies:
         df = pd.DataFrame(new_movies)
         df.to_csv(csv_filename, mode="a", header=not os.path.exists(csv_filename), index=False)
-        log_message(f"✅ {len(new_movies)} new movies added to CSV.")
+        log_message(f"✅ {len(new_movies)} new movies added to CSV in Letterboxd format.")
     else:
         log_message("✅ No new movies to export.")
 
