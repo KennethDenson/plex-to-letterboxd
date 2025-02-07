@@ -2,7 +2,11 @@ services:
   plex-to-letterboxd:
     build: .
     container_name: plex-to-letterboxd
-    env_file:
-      - .env  # Load environment variables securely from .env file
+    environment:
+      - TZ=America/Chicago  # Set your local timezone
+      - PLEX_URL=http://192.168.1.139:32400
+      - PLEX_TOKEN=QFM_K3owt2wbCqvYcKQG
+      - PLEX_LIBRARIES=Movies,Queer Film,Theatre,Concerts
+      - SCHEDULE_TIME=09:40
     volumes:
       - /synology/nas/plex-to-letterboxd:/output  # Updated location
